@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>진학 상담 관리 시스템</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background-color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            margin: 0 0 4px 0;
+            font-size: 20px;
+            color: #333;
+        }
+        
+        .header-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+        
+        .control-btn {
+            padding: 8px 14px;
+            margin: 3px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .export-btn { 
+            background-color: #28a745; 
+            color: white; 
+        }
+        .export-btn:hover { 
+            background-color: #218838; 
+        }
+        
+        .clear-btn { 
+            background-color: #dc3545; 
+            color: white; 
+        }
+        .clear-btn:hover { 
+            background-color: #c82333; 
+        }
+        
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 370px;
+            gap: 15px;
+        }
+        
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .student-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+        }
+        
+        .student-card {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .student-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        }
+        
+        .student-card.has-consultation {
+            background-color: #d4edda;
+            border-color: #28a745;
+        }
+        
+        .student-card.needs-attention {
+            background-color: #fff3cd;
+            border-color: #ffc107;
+        }
+        
+        .student-card.no-consultation {
+            background-color: white;
+            border-color: #dc3545;
+        }
+        
+        .student-card.selected {
+            border-color: #007bff;
+            box-shadow: 0 0 10px rgba(0,123,255,0.3);
+            transform: translateY(-1px);
+        }
+        
+        .student-number {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            transition: color 0.3s ease;
+        }
+        
+        .student-info {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.3;
+        }
+        
+        .target-school {
+            color: #007bff;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        
+        .current-grade {
+            color: #28a745;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        
+        .last-consultation {
+            color: #6c757d;
+            font-size: 10px;
+        }
+        
+        .consultation-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border: 2px solid white;
+        }
+        
+        /* Right Panel 스타일 */
+        .student-info-section, .consultation-summary-section {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+        }
+        
+        .info-header, .summary-header {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .info-header h3, .summary-header h3 {
+            margin: 0;
+            font-size: 16px;
+            color: #333;
+        }
+        
+        .selected-student-info {
+            min-height: 150px;
+        }
+        
+        .no-selection {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 150px;
+            color: #6c757d;
+            font-style: italic;
+            text-align: center;
+        }
+        
+        .student-basic-info {
+            margin-bottom: 15px;
+        }
+        
+        .basic-info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+        
+        .basic-info-label {
+            font-weight: bold;
+            color: #495057;
+            font-size: 13px;
+        }
+        
+        .basic-info-value {
+            color: #007bff;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        
+        .consultation-summary {
+            min-height: 200px;
+        }
+        
+        .recent-consultation {
+            padding: 12px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border-left: 3px solid #007bff;
+            margin-bottom: 10px;
+        }
+        
+        .consultation-date-summary {
+            font-size: 12px;
+            color: #007bff;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .consultation-type-summary {
+            font-size: 11px;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
+        .consultation-type-summary.진로 { background-color: #007bff; }
+        .consultation-type-summary.성적 { background-color: #28a745; }
+        .consultation-type-summary.생활 { background-color: #ffc107; color: #212529; }
+        .consultation-type-summary.학부모 { background-color: #dc3545; }
+        .consultation-type-summary.기타 { background-color: #6c757d; }
+        
+        .consultation-content-preview {
+            font-size: 12px;
+            color: #333;
+            line-height: 1.4;
+            max-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .more-consultations {
+            text-align: center;
+            padding: 10px;
+            color: #6c757d;
+            font-size: 11px;
+            font-style: italic;
+        }
+        
+        /* 모달 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+        
+        .close {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+            transition: opacity 0.2s ease;
+        }
+        
+        .close:hover {
+            opacity: 0.7;
+        }
+        
+        .modal-body {
+            padding: 20px;
+            max-height: calc(80vh - 120px);
+            overflow-y: auto;
+        }
+        
+        .student-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-item {
+            background-color: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            border-left: 3px solid #007bff;
+        }
+        
+        .summary-label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+        
+        .summary-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .consultation-history {
+            margin-bottom: 20px;
+        }
+        
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .history-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0;
+            color: #333;
+        }
+        
+        .add-consultation-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .add-consultation-btn:hover {
+            background-color: #218838;
+        }
+        
+        .consultation-list {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            overflow: hidden;
+            background-color: white;
+        }
+        
+        .consultation-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-bottom: 1px solid #dee2e6;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .consultation-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .consultation-item:last-child {
+            border-bottom: none;
+        }
+        
+        .consultation-item.selected {
+            background-color: #e3f2fd;
+            border-left: 3px solid #007bff;
+        }
+        
+        .consultation-date {
+            font-weight: bold;
+            color: #007bff;
+            font-size: 13px;
+        }
+        
+        .consultation-preview {
+            font-size: 11px;
+            color: #6c757d;
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .consultation-detail {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border-left: 3px solid #007bff;
+        }
+        
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .detail-date {
+            font-size: 14px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .edit-btn, .delete-btn {
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: bold;
+            margin-left: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        .edit-btn {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .edit-btn:hover {
+            background-color: #e0a800;
+        }
+        
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+        
+        .detail-content {
+            line-height: 1.5;
+            color: #333;
+            white-space: pre-wrap;
+            font-size: 13px;
+        }
+        
+        /* 상담 추가/편집 폼 */
+        .form-group {
+            margin-bottom: 12px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: bold;
+            color: #333;
+            font-size: 12px;
+        }
+        
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 13px;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease;
+        }
+        
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+        
+        .form-textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .form-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+        
+        .btn-save {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-save:hover {
+            background-color: #218838;
+        }
+        
+        .btn-cancel {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-cancel:hover {
+            background-color: #5a6268;
+        }
+        
+        .no-consultations {
+            text-align: center;
+            padding: 30px;
+            color: #6c757d;
+            font-style: italic;
+            font-size: 13px;
+        }
+        
+        /* 반응형 디자인 */
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .student-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .student-grid {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 8px;
+                padding: 10px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 2% auto;
+                max-height: 95vh;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .student-summary {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .header-controls {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎓 진학 상담 관리 시스템</h1>
+        <div class="header-controls">
+            <button class="control-btn export-btn" onclick="exportData()">📊 데이터 내보내기</button>
+            <button class="control-btn clear-btn" onclick="clearAllData()">🗑️ 모든 데이터 삭제</button>
+        </div>
+    </div>
+    
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="student-grid" id="studentGrid">
+                <!-- 학생 카드들이 여기에 생성됩니다 -->
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="student-info-section">
+                <div class="info-header">
+                    <h3>학생 정보</h3>
+                </div>
+                <div class="selected-student-info" id="selectedStudentInfo">
+                    <div class="no-selection">
+                        학생을 선택해주세요
+                    </div>
+                </div>
+            </div>
+            
+            <div class="consultation-summary-section">
+                <div class="summary-header">
+                    <h3>최근 상담 기록</h3>
+                </div>
+                <div class="consultation-summary" id="consultationSummary">
+                    <!-- 선택된 학생의 간략 상담 정보가 여기에 표시됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 학생 상세 정보 모달 -->
+    <div id="studentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">학생 상세 정보</h2>
+                <span class="close" onclick="closeStudentModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="student-summary" id="studentSummary">
+                    <!-- 학생 요약 정보가 여기에 표시됩니다 -->
+                </div>
+                
+                <div class="consultation-history">
+                    <div class="history-header">
+                        <h3 class="history-title">상담 기록</h3>
+                        <button class="add-consultation-btn" onclick="showAddConsultation()">+ 상담 기록 추가</button>
+                    </div>
+                    
+                    <div class="consultation-list" id="consultationList">
+                        <!-- 상담 기록 리스트가 여기에 표시됩니다 -->
+                    </div>
+                </div>
+                
+                <div class="consultation-detail" id="consultationDetail" style="display: none;">
+                    <!-- 선택된 상담의 상세 내용이 여기에 표시됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 상담 추가/편집 모달 -->
+    <div id="consultationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="consultationModalTitle">상담 기록 추가</h2>
+                <span class="close" onclick="closeConsultationModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="consultationForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">상담 날짜</label>
+                            <input type="date" class="form-input" id="consultationDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">상담 유형</label>
+                            <select class="form-select" id="consultationType" onchange="toggleParentFields()">
+                                <option value="진로">진로 상담</option>
+                                <option value="성적">성적 상담</option>
+                                <option value="생활">생활 상담</option>
+                                <option value="학부모">학부모 상담</option>
+                                <option value="기타">기타</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- 학생 상담 필드 -->
+                    <div class="student-consultation-fields">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">목표 학교</label>
+                                <input type="text" class="form-input" id="targetSchool" placeholder="예: ○○고등학교">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">현재 내신 등급</label>
+                                <input type="text" class="form-input" id="currentGrade" placeholder="예: 2.5">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 학부모 상담 전용 필드 -->
+                    <div class="parent-consultation-fields" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">참석자</label>
+                                <select class="form-select" id="attendee">
+                                    <option value="부모님">부모님</option>
+                                    <option value="아버지">아버지</option>
+                                    <option value="어머니">어머니</option>
+                                    <option value="보호자">보호자</option>
+                                    <option value="기타">기타</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">상담 주제</label>
+                                <input type="text" class="form-input" id="consultationTopic" placeholder="예: 진로 고민, 성적 상담 등">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">학부모 의견/요구사항</label>
+                            <textarea class="form-textarea" id="parentOpinion" placeholder="학부모님의 의견이나 요구사항을 입력하세요..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">상담 내용</label>
+                        <textarea class="form-textarea" id="consultationContent" placeholder="상담 내용을 입력하세요..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">후속 조치</label>
+                        <textarea class="form-textarea" id="followUpActions" placeholder="후속 조치사항을 입력하세요..."></textarea>
+                    </div>
+                    
+                    <div class="form-buttons">
+                        <button type="button" class="btn-cancel" onclick="closeConsultationModal()">취소</button>
+                        <button type="submit" class="btn-save">저장</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let studentData = {};
+        let currentStudentNumber = null;
+        let selectedConsultationDate = null;
+        let editingConsultation = null;
+        
+        // 학부모 상담 필드 토글
+        function toggleParentFields() {
+            const consultationType = document.getElementById('consultationType').value;
+            const studentFields = document.querySelector('.student-consultation-fields');
+            const parentFields = document.querySelector('.parent-consultation-fields');
+            
+            if (consultationType === '학부모') {
+                studentFields.style.display = 'none';
+                parentFields.style.display = 'block';
+            } else {
+                studentFields.style.display = 'block';
+                parentFields.style.display = 'none';
+            }
+        }
+
+        // 페이지 로드시 초기화
+        window.onload = function() {
+            loadData();
+            createStudentCards();
+            updateStudentCards();
+        };
+
+        // 학생 카드 생성
+        function createStudentCards() {
+            const studentGrid = document.getElementById('studentGrid');
+            studentGrid.innerHTML = '';
+            
+            for (let i = 1; i <= 35; i++) {
+                const card = document.createElement('div');
+                card.className = 'student-card';
+                card.id = `student-${i}`;
+                
+                // 싱글클릭과 더블클릭 구분
+                let clickTimer = null;
+                card.onclick = (e) => {
+                    if (clickTimer) {
+                        clearTimeout(clickTimer);
+                        clickTimer = null;
+                        // 더블클릭
+                        showStudentDetailModal(i);
+                    } else {
+                        clickTimer = setTimeout(() => {
+                            // 싱글클릭
+                            selectStudent(i);
+                            clickTimer = null;
+                        }, 300);
+                    }
+                };
+                
+                card.innerHTML = `
+                    <div class="consultation-count" id="count-${i}" style="display: none;">0</div>
+                    <div class="student-number">${i}번</div>
+                    <div class="student-info" id="info-${i}">
+                        <div class="target-school" id="target-${i}">목표 학교 미설정</div>
+                        <div class="current-grade" id="grade-${i}">등급 미입력</div>
+                        <div class="last-consultation" id="last-${i}">상담 기록 없음</div>
+                    </div>
+                `;
+                
+                studentGrid.appendChild(card);
+            }
+        }
+
+        // 학생 카드 업데이트
+        function updateStudentCards() {
+            for (let i = 1; i <= 35; i++) {
+                const student = studentData[i];
+                const card = document.getElementById(`student-${i}`);
+                const targetEl = document.getElementById(`target-${i}`);
+                const gradeEl = document.getElementById(`grade-${i}`);
+                const lastEl = document.getElementById(`last-${i}`);
+                const countEl = document.getElementById(`count-${i}`);
+                
+                if (student && student.consultations && Object.keys(student.consultations).length > 0) {
+                    // 상담 기록이 있는 경우
+                    card.classList.add('has-consultation');
+                    
+                    const consultationDates = Object.keys(student.consultations).sort().reverse();
+                    const latestDate = consultationDates[0];
+                    const latestConsultation = student.consultations[latestDate];
+                    
+                    // 상담 횟수 표시
+                    const consultationCount = consultationDates.length;
+                    countEl.textContent = consultationCount;
+                    countEl.style.display = 'flex';
+                    
+                    // 최신 정보로 업데이트
+                    targetEl.textContent = latestConsultation.targetSchool || '목표 학교 미설정';
+                    gradeEl.textContent = latestConsultation.currentGrade ? `내신 ${latestConsultation.currentGrade}등급` : '등급 미입력';
+                    lastEl.textContent = `최근 상담: ${formatDate(latestDate)}`;
+                    
+                    // 최근 상담이 오래된 경우 주의 표시
+                    const daysSinceLastConsultation = getDaysDifference(latestDate, new Date().toISOString().split('T')[0]);
+                    if (daysSinceLastConsultation > 30) {
+                        card.classList.add('needs-attention');
+                    }
+                } else {
+                    // 상담 기록이 없는 경우
+                    card.classList.remove('has-consultation', 'needs-attention');
+                    card.classList.add('no-consultation');
+                    countEl.style.display = 'none';
+                    targetEl.textContent = '목표 학교 미설정';
+                    gradeEl.textContent = '등급 미입력';
+                    lastEl.textContent = '상담 기록 없음';
+                }
+            }
+        }
+
+        // 싱글클릭: Right Panel에 학생 정보 표시
+        function selectStudent(studentNumber) {
+            currentStudentNumber = studentNumber;
+            
+            // 기존 선택 해제
+            document.querySelectorAll('.student-card.selected').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // 새로운 선택 표시
+            document.getElementById(`student-${studentNumber}`).classList.add('selected');
+            
+            const student = studentData[studentNumber] || { consultations: {} };
+            const consultations = student.consultations || {};
+            const consultationDates = Object.keys(consultations).sort().reverse();
+            
+            // 학생 기본 정보 표시
+            const selectedStudentInfo = document.getElementById('selectedStudentInfo');
+            let latestConsultation = null;
+            if (consultationDates.length > 0) {
+                latestConsultation = consultations[consultationDates[0]];
+            }
+            
+            selectedStudentInfo.innerHTML = `
+                <div class="student-basic-info">
+                    <div class="basic-info-item">
+                        <span class="basic-info-label">학생 번호</span>
+                        <span class="basic-info-value">${studentNumber}번</span>
+                    </div>
+                    <div class="basic-info-item">
+                        <span class="basic-info-label">목표 학교</span>
+                        <span class="basic-info-value">${latestConsultation?.targetSchool || '미설정'}</span>
+                    </div>
+                    <div class="basic-info-item">
+                        <span class="basic-info-label">현재 내신</span>
+                        <span class="basic-info-value">${latestConsultation?.currentGrade || '미입력'}</span>
+                    </div>
+                    <div class="basic-info-item">
+                        <span class="basic-info-label">상담 횟수</span>
+                        <span class="basic-info-value">${consultationDates.length}회</span>
+                    </div>
+                </div>
+            `;
+            
+            // 최근 상담 기록 표시
+            const consultationSummary = document.getElementById('consultationSummary');
+            if (consultationDates.length > 0) {
+                const recentConsultations = consultationDates.slice(0, 3); // 최근 3개만
+                consultationSummary.innerHTML = recentConsultations.map(date => {
+                    const consultation = consultations[date];
+                    const consultationType = consultation.type || '진로';
+                    return `
+                        <div class="recent-consultation">
+                            <div class="consultation-date-summary">${formatDate(date)}</div>
+                            <div class="consultation-type-summary ${consultationType}">${consultationType}</div>
+                            <div class="consultation-content-preview">${consultation.content ? consultation.content.substring(0, 100) + (consultation.content.length > 100 ? '...' : '') : '내용 없음'}</div>
+                        </div>
+                    `;
+                }).join('') + (consultationDates.length > 3 ? `<div class="more-consultations">외 ${consultationDates.length - 3}건의 상담 기록</div>` : '');
+            } else {
+                consultationSummary.innerHTML = '<div class="no-selection">상담 기록이 없습니다</div>';
+            }
+        }
+
+        // 더블클릭: 모달로 상세 정보 표시
+        function showStudentDetailModal(studentNumber) {
+            currentStudentNumber = studentNumber;
+            const modal = document.getElementById('studentModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const studentSummary = document.getElementById('studentSummary');
+            const consultationList = document.getElementById('consultationList');
+            const consultationDetail = document.getElementById('consultationDetail');
+            
+            modalTitle.textContent = `${studentNumber}번 학생 상세 정보`;
+            
+            const student = studentData[studentNumber] || { consultations: {} };
+            const consultations = student.consultations || {};
+            const consultationDates = Object.keys(consultations).sort().reverse();
+            
+            // 학생 요약 정보
+            let latestConsultation = null;
+            if (consultationDates.length > 0) {
+                latestConsultation = consultations[consultationDates[0]];
+            }
+            
+            studentSummary.innerHTML = `
+                <div class="summary-item">
+                    <div class="summary-label">학생 번호</div>
+                    <div class="summary-value">${studentNumber}번</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">목표 학교</div>
+                    <div class="summary-value">${latestConsultation?.targetSchool || '미설정'}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">현재 내신 등급</div>
+                    <div class="summary-value">${latestConsultation?.currentGrade || '미입력'}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">총 상담 횟수</div>
+                    <div class="summary-value">${consultationDates.length}회</div>
+                </div>
+            `;
+            
+            // 상담 기록 리스트
+            if (consultationDates.length > 0) {
+                consultationList.innerHTML = consultationDates.map(date => {
+                    const consultation = consultations[date];
+                    const consultationType = consultation.type || '진로';
+                    return `
+                        <div class="consultation-item" onclick="showConsultationDetail('${date}')">
+                            <div>
+                                <div class="consultation-date">${formatDate(date)}</div>
+                                <div class="consultation-preview">${consultation.content ? consultation.content.substring(0, 50) + '...' : '내용 없음'}</div>
+                            </div>
+                            <div class="consultation-type-summary ${consultationType}" style="margin: 0;">
+                                ${consultationType}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                consultationList.innerHTML = '<div class="no-consultations">아직 상담 기록이 없습니다.</div>';
+            }
+            
+            // 상세 내용 초기화
+            consultationDetail.style.display = 'none';
+            selectedConsultationDate = null;
+            
+            modal.style.display = 'block';
+        }
+
+        // 상담 상세 내용 표시
+        function showConsultationDetail(date) {
+            selectedConsultationDate = date;
+            const consultation = studentData[currentStudentNumber].consultations[date];
+            const consultationDetail = document.getElementById('consultationDetail');
+            
+            // 선택된 항목 하이라이트
+            document.querySelectorAll('.consultation-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            // 학부모 상담인지 확인
+            const isParentConsultation = consultation.type === '학부모';
+            
+            consultationDetail.innerHTML = `
+                <div class="detail-header">
+                    <div class="detail-date">${formatDate(date)} 상담 기록</div>
+                    <div>
+                        <button class="edit-btn" onclick="editConsultation('${date}')">수정</button>
+                        <button class="delete-btn" onclick="deleteConsultation('${date}')">삭제</button>
+                    </div>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <span class="consultation-type-summary ${consultation.type || '진로'}">${consultation.type || '진로'}</span>
+                    ${isParentConsultation ? '' : `
+                        | <strong>목표 학교:</strong> ${consultation.targetSchool || '미설정'} 
+                        | <strong>내신 등급:</strong> ${consultation.currentGrade || '미입력'}
+                    `}
+                </div>
+                ${isParentConsultation && consultation.attendee ? `
+                    <div style="margin-bottom: 15px;">
+                        <strong>참석자:</strong> ${consultation.attendee} |
+                        <strong>상담 주제:</strong> ${consultation.consultationTopic || '미입력'}
+                    </div>
+                ` : ''}
+                ${isParentConsultation && consultation.parentOpinion ? `
+                    <div style="margin-bottom: 15px;">
+                        <strong>학부모 의견/요구사항:</strong>
+                        <div class="detail-content">${consultation.parentOpinion}</div>
+                    </div>
+                ` : ''}
+                <div style="margin-bottom: 15px;">
+                    <strong>상담 내용:</strong>
+                    <div class="detail-content">${consultation.content || '내용 없음'}</div>
+                </div>
+                ${consultation.followUp ? `
+                    <div>
+                        <strong>후속 조치:</strong>
+                        <div class="detail-content">${consultation.followUp}</div>
+                    </div>
+                ` : ''}
+            `;
+            
+            consultationDetail.style.display = 'block';
+        }
+
+        // 상담 추가 폼 표시
+        function showAddConsultation() {
+            if (!currentStudentNumber) {
+                alert('먼저 학생을 선택해주세요.');
+                return;
+            }
+            
+            editingConsultation = null;
+            const modal = document.getElementById('consultationModal');
+            const modalTitle = document.getElementById('consultationModalTitle');
+            const form = document.getElementById('consultationForm');
+            
+            modalTitle.textContent = '상담 기록 추가';
+            form.reset();
+            document.getElementById('consultationDate').value = new Date().toISOString().split('T')[0];
+            
+            // 기본적으로 학생 상담 필드 표시
+            document.getElementById('consultationType').value = '진로';
+            toggleParentFields();
+            
+            // 기존 정보가 있으면 자동 입력 (학생 상담만)
+            const student = studentData[currentStudentNumber];
+            if (student && student.consultations) {
+                const consultationDates = Object.keys(student.consultations).sort().reverse();
+                if (consultationDates.length > 0) {
+                    const latestConsultation = student.consultations[consultationDates[0]];
+                    if (latestConsultation.type !== '학부모') {
+                        document.getElementById('targetSchool').value = latestConsultation.targetSchool || '';
+                        document.getElementById('currentGrade').value = latestConsultation.currentGrade || '';
+                    }
+                }
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        // 상담 편집
+        function editConsultation(date) {
+            editingConsultation = date;
+            const consultation = studentData[currentStudentNumber].consultations[date];
+            const modal = document.getElementById('consultationModal');
+            const modalTitle = document.getElementById('consultationModalTitle');
+            
+            modalTitle.textContent = '상담 기록 수정';
+            
+            document.getElementById('consultationDate').value = date;
+            document.getElementById('consultationType').value = consultation.type || '진로';
+            
+            // 학부모 상담 필드 채우기
+            if (consultation.type === '학부모') {
+                document.getElementById('attendee').value = consultation.attendee || '부모님';
+                document.getElementById('consultationTopic').value = consultation.consultationTopic || '';
+                document.getElementById('parentOpinion').value = consultation.parentOpinion || '';
+            } else {
+                document.getElementById('targetSchool').value = consultation.targetSchool || '';
+                document.getElementById('currentGrade').value = consultation.currentGrade || '';
+            }
+            
+            document.getElementById('consultationContent').value = consultation.content || '';
+            document.getElementById('followUpActions').value = consultation.followUp || '';
+            
+            // 필드 표시/숨김 토글
+            toggleParentFields();
+            
+            modal.style.display = 'block';
+        }
+
+        // 상담 삭제
+        function deleteConsultation(date) {
+            if (confirm('이 상담 기록을 삭제하시겠습니까?')) {
+                delete studentData[currentStudentNumber].consultations[date];
+                
+                // 상담이 모두 삭제되면 학생 데이터도 정리
+                if (Object.keys(studentData[currentStudentNumber].consultations).length === 0) {
+                    delete studentData[currentStudentNumber];
+                }
+                
+                saveData();
+                updateStudentCards();
+                showStudentDetailModal(currentStudentNumber);
+            }
+        }
+
+        // 상담 폼 제출
+        document.getElementById('consultationForm').onsubmit = function(e) {
+            e.preventDefault();
+            
+            const date = document.getElementById('consultationDate').value;
+            const type = document.getElementById('consultationType').value;
+            const content = document.getElementById('consultationContent').value;
+            const followUp = document.getElementById('followUpActions').value;
+            
+            // 상담 유형에 따른 데이터 수집
+            let consultationData = {
+                type,
+                content,
+                followUp,
+                createdAt: new Date().toISOString()
+            };
+            
+            if (type === '학부모') {
+                // 학부모 상담 필드
+                consultationData.attendee = document.getElementById('attendee').value;
+                consultationData.consultationTopic = document.getElementById('consultationTopic').value;
+                consultationData.parentOpinion = document.getElementById('parentOpinion').value;
+            } else {
+                // 학생 상담 필드
+                consultationData.targetSchool = document.getElementById('targetSchool').value;
+                consultationData.currentGrade = document.getElementById('currentGrade').value;
+            }
+            
+            // 학생 데이터 초기화
+            if (!studentData[currentStudentNumber]) {
+                studentData[currentStudentNumber] = { consultations: {} };
+            }
+            if (!studentData[currentStudentNumber].consultations) {
+                studentData[currentStudentNumber].consultations = {};
+            }
+            
+            // 편집 중인 경우 기존 날짜의 데이터 삭제
+            if (editingConsultation && editingConsultation !== date) {
+                delete studentData[currentStudentNumber].consultations[editingConsultation];
+            }
+            
+            // 새 상담 데이터 저장
+            studentData[currentStudentNumber].consultations[date] = consultationData;
+            
+            saveData();
+            updateStudentCards();
+            selectStudent(currentStudentNumber); // Right Panel 업데이트
+            closeConsultationModal();
+            showStudentDetailModal(currentStudentNumber);
+            
+            // 추가/수정된 상담 자동 선택
+            setTimeout(() => showConsultationDetail(date), 100);
+        };
+
+        // 모달 닫기 함수들
+        function closeStudentModal() {
+            document.getElementById('studentModal').style.display = 'none';
+            currentStudentNumber = null;
+            selectedConsultationDate = null;
+        }
+
+        function closeConsultationModal() {
+            document.getElementById('consultationModal').style.display = 'none';
+            editingConsultation = null;
+        }
+
+        // 데이터 저장/로드
+        function saveData() {
+            localStorage.setItem('studentConsultationData', JSON.stringify(studentData));
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('studentConsultationData');
+            if (saved) {
+                studentData = JSON.parse(saved);
+            }
+        }
+
+        // 데이터 내보내기
+        function exportData() {
+            const dataStr = JSON.stringify(studentData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `consultation_data_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+ㄱ
+        // 모든 데이터 삭제
+        function clearAllData() {
+            if (confirm('⚠️ 모든 상담 데이터를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) {
+                if (confirm('정말로 모든 데이터를 삭제하시겠습니까?')) {
+                    studentData = {};
+                    localStorage.removeItem('studentConsultationData');
+                    updateStudentCards();
+                    closeStudentModal();
+                    alert('모든 데이터가 삭제되었습니다.');
+                }
+            }
+        }
+
+        // 유틸리티 함수들
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'short'
+            });
+        }
+
+        function getDaysDifference(date1, date2) {
+            const d1 = new Date(date1);
+            const d2 = new Date(date2);
+            const timeDiff = Math.abs(d2.getTime() - d1.getTime());
+            return Math.ceil(timeDiff / (1000 * 3600 * 24));
+        }
+
+        // 모달 외부 클릭시 닫기
+        window.onclick = function(event) {
+            const studentModal = document.getElementById('studentModal');
+            const consultationModal = document.getElementById('consultationModal');
+            
+            if (event.target === studentModal) {
+                closeStudentModal();
+            }
+            if (event.target === consultationModal) {
+                closeConsultationModal();
+            }
+        };
+    </script>
+</body>
+</html>
