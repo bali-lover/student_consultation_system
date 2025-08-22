@@ -127,8 +127,8 @@
         }
         
         .student-card.no-consultation {
-            background-color: white;
-            border-color: #dc3545;
+            background-color: #f8f9fa;
+            border-color: #6c757d;
         }
         
         .student-card.selected {
@@ -179,20 +179,20 @@
         }
         
         .current-grade {
-            font-size: 14px;
+            font-size: 16px;
             color: #28a745;
             font-weight: bold;
         }
         
         .school-label {
-            font-size: 9px;
+            font-size: 10px;
             color: #6c757d;
             font-weight: bold;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
         }
         
         .student-school {
-            font-size: 10px;
+            font-size: 12px;
             color: #007bff;
             font-weight: bold;
             text-align: center;
@@ -201,7 +201,7 @@
         }
         
         .parent-school {
-            font-size: 10px;
+            font-size: 12px;
             color: #dc3545;
             font-weight: bold;
             text-align: center;
@@ -919,6 +919,11 @@
             
             .report-consultation {
                 page-break-inside: avoid;
+                margin-bottom: 10pt;
+            }
+            
+            .report-summary {
+                page-break-inside: avoid;
             }
         }
         
@@ -1208,6 +1213,12 @@
                     <div class="form-group">
                         <label class="form-label">후속 조치</label>
                         <textarea class="form-textarea" id="followUpActions" placeholder="후속 조치사항을 입력하세요..."></textarea>
+                        <div style="margin-top: 10px;">
+                            <label style="display: flex; align-items: center; font-size: 14px; color: #495057;">
+                                <input type="checkbox" id="needsFollowUp" style="margin-right: 8px; transform: scale(1.2);">
+                                추후 조치 필요 (체크 시 학생 카드가 초록색으로 표시됩니다)
+                            </label>
+                        </div>
                     </div>
                     
                     <div class="form-buttons">
@@ -1308,11 +1319,11 @@
                             <div class="current-grade" id="grade-${i}">미입력</div>
                         </div>
                         <div class="card-bottom-left">
-                            <div class="school-label">학생:</div>
+                            <div class="school-label">학생</div>
                             <div class="student-school" id="student-school-${i}">미설정</div>
                         </div>
                         <div class="card-bottom-right">
-                            <div class="school-label">학부모:</div>
+                            <div class="school-label">학부모</div>
                             <div class="parent-school" id="parent-school-${i}">미설정</div>
                         </div>
                     </div>
@@ -1345,9 +1356,20 @@
                         if (student.basicInfo.parentSchool) parentTargetSchool = student.basicInfo.parentSchool;
                     }
                     
+                    // 추후 조치가 필요한 상담이 있는지 확인
+                    const needsFollowUp = student.consultations && Object.keys(student.consultations).length > 0 && 
+                                         Object.values(student.consultations).some(consultation => consultation.needsFollowUp);
+                    
+                    if (needsFollowUp) {
+                        card.classList.add('has-consultation');
+                        card.classList.remove('no-consultation');
+                    } else {
+                        card.classList.add('no-consultation');
+                        card.classList.remove('has-consultation');
+                    }
+                    
                     // 상담 기록이 있는 경우
                     if (student.consultations && Object.keys(student.consultations).length > 0) {
-                        card.classList.add('has-consultation');
                         
                         const consultationIds = Object.keys(student.consultations).sort((a, b) => {
                             const timeA = student.consultations[a].createdAt || '0';
@@ -1385,23 +1407,14 @@
                             }
                         }
                         
-                        // 최근 상담이 오래된 경우 주의 표시
-                        const latestConsultation = student.consultations[consultationIds[0]];
-                        const consultationDate = latestConsultation.date || consultationIds[0].split('_')[0];
-                        const daysSinceLastConsultation = getDaysDifference(consultationDate, new Date().toISOString().split('T')[0]);
-                        if (daysSinceLastConsultation > 30) {
-                            card.classList.add('needs-attention');
-                        }
+                        // 기존 needs-attention 클래스 제거 (노란색 제거)
+                        card.classList.remove('needs-attention');
                     } else {
                         // 상담 기록이 없는 경우
-                        card.classList.remove('has-consultation', 'needs-attention');
-                        card.classList.add('no-consultation');
                         countEl.style.display = 'none';
                     }
                 } else {
                     // 학생 데이터가 없는 경우
-                    card.classList.remove('has-consultation', 'needs-attention');
-                    card.classList.add('no-consultation');
                     countEl.style.display = 'none';
                 }
                 
@@ -1479,11 +1492,11 @@
                         <span class="basic-info-value">${studentContact}</span>
                     </div>
                     <div class="basic-info-item">
-                        <span class="basic-info-label">📞 아버지</span>
+                        <span class="basic-info-label">🧑‍💼 아버지</span>
                         <span class="basic-info-value">${fatherContact}</span>
                     </div>
                     <div class="basic-info-item">
-                        <span class="basic-info-label">📞 어머니</span>
+                        <span class="basic-info-label">👩‍🚒 어머니</span>
                         <span class="basic-info-value">${motherContact}</span>
                     </div>
                 </div>
@@ -1642,6 +1655,7 @@
             document.getElementById('consultationSummaryInput').value = '';
             document.getElementById('consultationContent').value = '';
             document.getElementById('followUpActions').value = '';
+            document.getElementById('needsFollowUp').checked = false;
             toggleParentFields();
             
             modal.style.display = 'block';
@@ -1670,6 +1684,7 @@
             
             document.getElementById('consultationContent').value = consultation.content || '';
             document.getElementById('followUpActions').value = consultation.followUp || '';
+            document.getElementById('needsFollowUp').checked = consultation.needsFollowUp || false;
             
             // 필드 표시/숨김 토글
             toggleParentFields();
@@ -1684,12 +1699,39 @@
                 
                 // 상담이 모두 삭제되면 학생 데이터도 정리
                 if (Object.keys(studentData[currentStudentNumber].consultations).length === 0) {
-                    delete studentData[currentStudentNumber];
+                    // 기본정보도 없거나 비어있으면 학생 데이터 완전 삭제
+                    const basicInfo = studentData[currentStudentNumber].basicInfo;
+                    const hasBasicInfo = basicInfo && (
+                        basicInfo.studentSchool || 
+                        basicInfo.currentGrade || 
+                        basicInfo.parentSchool || 
+                        basicInfo.studentContact || 
+                        basicInfo.fatherContact || 
+                        basicInfo.motherContact || 
+                        basicInfo.notes
+                    );
+                    
+                    if (!hasBasicInfo) {
+                        delete studentData[currentStudentNumber];
+                        saveData();
+                        // 삭제된 학생 카드 즉시 업데이트
+                        const deletedCard = document.getElementById(`student-${currentStudentNumber}`);
+                        if (deletedCard) {
+                            deletedCard.classList.remove('has-consultation', 'no-consultation', 'selected');
+                        }
+                        updateStudentCards();
+                        // 학생 데이터가 삭제되었으므로 모달 닫기
+                        document.getElementById('studentModal').style.display = 'none';
+                        currentStudentNumber = null;
+                        return;
+                    }
                 }
                 
                 saveData();
                 updateStudentCards();
                 showStudentDetailModal(currentStudentNumber);
+                // 최근 상담 목록 즉시 새로고침
+                selectStudent(currentStudentNumber);
             }
         }
 
@@ -1702,6 +1744,7 @@
             const summary = document.getElementById('consultationSummaryInput').value.trim();
             const content = document.getElementById('consultationContent').value.trim();
             const followUp = document.getElementById('followUpActions').value.trim();
+            const needsFollowUp = document.getElementById('needsFollowUp').checked;
             
             // 디버깅: 입력값 확인
             console.log('폼에서 가져온 값들:');
@@ -1731,6 +1774,7 @@
             consultationData.summary = String(summary);
             consultationData.content = String(content);
             consultationData.followUp = String(followUp);
+            consultationData.needsFollowUp = Boolean(needsFollowUp);
             consultationData.date = String(date);
             consultationData.createdAt = existingConsultation ? String(existingConsultation.createdAt) : new Date().toISOString();
             
@@ -1770,9 +1814,9 @@
             
             saveData();
             updateStudentCards();
-            selectStudent(currentStudentNumber); // Right Panel 업데이트
             closeConsultationModal();
             showStudentDetailModal(currentStudentNumber);
+            selectStudent(currentStudentNumber); // Right Panel 업데이트
             
         };
 
@@ -1835,10 +1879,28 @@
             };
             studentData[currentStudentNumber].basicInfo = JSON.parse(JSON.stringify(basicInfoData));
             
-            saveData();
-            updateStudentCards();
-            selectStudent(currentStudentNumber); // Right Panel 업데이트
-            closeStudentInfoModal();
+            // 모든 기본정보가 비어있고 상담 기록도 없으면 학생 데이터 삭제
+            const hasBasicInfo = currentGrade || studentSchool || parentSchool || studentContact || fatherContact || motherContact || notes;
+            const hasConsultations = studentData[currentStudentNumber].consultations && Object.keys(studentData[currentStudentNumber].consultations).length > 0;
+            
+            if (!hasBasicInfo && !hasConsultations) {
+                delete studentData[currentStudentNumber];
+                saveData();
+                // 삭제된 학생 카드 즉시 업데이트
+                const deletedCard = document.getElementById(`student-${currentStudentNumber}`);
+                if (deletedCard) {
+                    deletedCard.classList.remove('has-consultation', 'no-consultation', 'selected');
+                }
+                updateStudentCards();
+                closeStudentInfoModal();
+                // 삭제된 학생은 선택 해제
+                currentStudentNumber = null;
+            } else {
+                saveData();
+                updateStudentCards();
+                selectStudent(currentStudentNumber); // Right Panel 업데이트
+                closeStudentInfoModal();
+            }
         };
 
         // 모달 닫기 함수들
@@ -2425,6 +2487,12 @@
                     <div>
                         <strong style="color: #495057;">📋 후속 조치:</strong>
                         <textarea id="detailModalFollowUp" style="margin-top: 5px; width: 100%; padding: 10px; background-color: #fff3cd; border-radius: 4px; border: 1px solid #ffeaa7; font-family: inherit; font-size: 14px; resize: none;" rows="3" placeholder="후속 조치를 입력하세요...">${consultation.followUp || ''}</textarea>
+                        <div style="margin-top: 10px;">
+                            <label style="display: flex; align-items: center; font-size: 14px; color: #495057;">
+                                <input type="checkbox" id="detailModalNeedsFollowUp" ${consultation.needsFollowUp ? 'checked' : ''} style="margin-right: 8px; transform: scale(1.2);">
+                                추후 조치 필요 (체크 시 학생 카드가 초록색으로 표시됩니다)
+                            </label>
+                        </div>
                     </div>
                 </div>
             `;
@@ -2452,12 +2520,14 @@
                 const summary = document.getElementById('detailModalSummary').value;
                 const content = document.getElementById('detailModalContent').value;
                 const followUp = document.getElementById('detailModalFollowUp').value;
+                const needsFollowUp = document.getElementById('detailModalNeedsFollowUp').checked;
                 
                 // 기존 상담 데이터 업데이트
                 const consultation = studentData[currentStudentNumber].consultations[currentConsultationId];
                 consultation.summary = summary;
                 consultation.content = content;
                 consultation.followUp = followUp;
+                consultation.needsFollowUp = needsFollowUp;
                 consultation.updatedAt = new Date().toISOString();
                 
                 saveData();
